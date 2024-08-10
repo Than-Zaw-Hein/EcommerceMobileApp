@@ -17,14 +17,13 @@ class SharedPreferencesHelper(context: Context) {
 
     fun setFirstTime() {
         sharedPreferences.edit {
-            putBoolean(FIRST_TIME, true)
+            putBoolean(FIRST_TIME, false)
 
         }
     }
 
-    fun getUser(): Boolean{
-        return sharedPreferences.getBoolean(FIRST_TIME,false)
-    }
+    val isFirstTime = sharedPreferences.getBoolean(FIRST_TIME, true)
+
 
     // Optionally, you can add a method to clear all preferences
     fun clearPreferences() {

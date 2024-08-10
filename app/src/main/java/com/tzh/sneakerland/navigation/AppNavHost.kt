@@ -7,16 +7,29 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.tzh.sneakerland.data.model.dummySneakerList
+import com.tzh.sneakerland.data.model.SneakerModel
 import com.tzh.sneakerland.screen.detail.DetailScreen
 import com.tzh.sneakerland.screen.home.HomeScreen
+import com.tzh.sneakerland.screen.onBoard.OnBoardScreen
+import com.tzh.sneakerland.util.Extension.toSneakerModel
+import com.tzh.sneakerland.util.Extension.toString
+import com.tzh.sneakerland.util.Gender
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun AppNavHost(sharedTransitionScope: SharedTransitionScope) {
-
+fun AppNavHost(
+    sharedTransitionScope: SharedTransitionScope,
+    onDetail: (Boolean) -> Unit
+) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = HomeRoute) {
+    NavHost(
+        navController = navController,
+        startDestination = HomeRoute
+    ) {
+        composable<OnBoardRoute> {
+
+        }
+
         composable<HomeRoute> {
             HomeScreen(
                 sharedTransitionScope = sharedTransitionScope,
@@ -24,20 +37,28 @@ fun AppNavHost(sharedTransitionScope: SharedTransitionScope) {
             ) {
                 navController.navigate(
                     DetailRoute(
-                        it.id
+                        id = it.id,
+                        image = it.image,
+                        name = it.name
                     )
                 )
+                onDetail(true)
             }
         }
 
         composable<DetailRoute> {
-            val args = it.toRoute<DetailRoute>()
+            val sneaker = it.toRoute<DetailRoute>()
             DetailScreen(
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = this,
-                dummySneakerList.find { it.id == args.id }!!
+                SneakerModel(
+                    id = sneaker.id,
+                    image = sneaker.image,
+                    name = sneaker.name,
+                )
             ) {
-
+                navController.popBackStack()
+                onDetail(false)
             }
         }
     }

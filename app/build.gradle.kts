@@ -5,9 +5,26 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
+    signingConfigs {
+        getByName("debug") {
+            storeFile =
+                file("C:\\Users\\User\\Desktop\\Development\\Android\\TZH\\SneakerLand\\keystore\\keystore.jks")
+            storePassword = "11111111"
+            keyAlias = "key0"
+            keyPassword = "11111111"
+        }
+        create("release") {
+            storeFile =
+                file("C:\\Users\\User\\Desktop\\Development\\Android\\TZH\\SneakerLand\\keystore\\keystore.jks")
+            storePassword = "11111111"
+            keyAlias = "key0"
+            keyPassword = "11111111"
+        }
+    }
     namespace = "com.tzh.sneakerland"
     compileSdk = 34
 
@@ -63,6 +80,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.firestore)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -72,7 +90,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-
+    implementation ("com.google.code.gson:gson:2.11.0")
     // Jetpack Compose Integration
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
@@ -81,4 +99,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+
+    implementation(libs.coil.compose)
+    implementation(libs.animated.navigation.bar)
 }
