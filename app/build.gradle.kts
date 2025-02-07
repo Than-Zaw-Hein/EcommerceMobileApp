@@ -12,7 +12,7 @@ android {
     signingConfigs {
         getByName("debug") {
             storeFile =
-                file("C:\\Users\\User\\Desktop\\Development\\Android\\TZH\\SneakerLand\\keystore\\keystore.jks")
+                file("C:\\Users\\hp\\Desktop\\TZH Development\\TZH\\Compose\\EcommerceMobileApp\\keystore\\keystore.jks")
             storePassword = "11111111"
             keyAlias = "key0"
             keyPassword = "11111111"

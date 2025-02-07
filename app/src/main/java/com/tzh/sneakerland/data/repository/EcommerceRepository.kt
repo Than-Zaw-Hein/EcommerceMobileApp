@@ -1,22 +1,23 @@
 package com.tzh.sneakerland.data.repository
 
-import com.google.firebase.firestore.CollectionReference
+import android.content.Context
+import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.toObject
 import com.tzh.sneakerland.data.model.SneakerModel
-import com.tzh.sneakerland.data.model.dummySneakerList
 import com.tzh.sneakerland.domain.repository.EcommerceRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import com.tzh.sneakerland.util.Extension.hasInternet
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class EcommerceRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
+    @ApplicationContext private val context: Context,
 ) : EcommerceRepository {
     private val sneakersCollection = firestore.collection("sneakers")
 
@@ -76,7 +77,6 @@ class EcommerceRepositoryImpl @Inject constructor(
                 onFailure(e.toString())
                 return@addSnapshotListener
             }
-
             if (documentSnapshot != null && documentSnapshot.exists()) {
                 val sneakerModel = documentSnapshot.toObject<SneakerModel>()
                 if (sneakerModel != null) {
@@ -93,7 +93,13 @@ class EcommerceRepositoryImpl @Inject constructor(
         color: String,
         size: Double,
         qty: Int
-    ): Result<Unit> {
+    ): Result<Task<DocumentReference>> {
+
+        if (!context.hasInternet()) {
+            return Result.failure(Exception("No Internet Connection"))
+        }
+
+
         return try {
             val cartCollection = firestore
                 .collection("cart")
@@ -115,13 +121,10 @@ class EcommerceRepositoryImpl @Inject constructor(
             )
 
             // Add the cart item to the collection
-            cartCollection.add(cartItem).await()
-
-            Result.success(Unit)
+            val result = cartCollection.add(cartItem)
+            Result.success(result)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
-    override var detailSneaker: SneakerModel? = null
 }

@@ -1,18 +1,15 @@
 package com.tzh.sneakerland.screen.detail
 
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tzh.sneakerland.data.model.SneakerModel
 import com.tzh.sneakerland.domain.repository.EcommerceRepository
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -56,7 +53,7 @@ class DetailViewModel @Inject constructor(
             return
         }
 
-        if (sneakerModel?.selectedSize == null) {
+        if (sneakerModel.selectedSize == null) {
             onShowMessage("Please select size.")
             return
         }
@@ -73,10 +70,14 @@ class DetailViewModel @Inject constructor(
                 qty = sneakerModel.currentQty,
                 size = sneakerModel.selectedSize!!
             ).onSuccess {
-                onSuccessMessage("Successfully added")
+                it.addOnSuccessListener {
+                    onSuccessMessage("Successfully added")
+                }.addOnFailureListener { e ->
+                    onShowMessage(e.toString())
+                }.await()
                 onLoading(false)
             }.onFailure { e ->
-                onShowMessage(e.toString())
+                onShowMessage(e.message.toString())
                 onLoading(false)
             }
         }

@@ -5,16 +5,14 @@ package com.tzh.sneakerland.screen.detail
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -52,17 +50,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawStyle
-import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -78,8 +72,8 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.tzh.sneakarland.ui.theme.OnPrimaryColor
 import com.tzh.sneakarland.ui.theme.PrimaryColor
-import com.tzh.sneakerland.data.model.SneakerModel
 import com.tzh.sneakarland.util.AnimatedKeyExtension
+import com.tzh.sneakerland.data.model.SneakerModel
 import com.tzh.sneakerland.screen.detail.component.AnimatedContainerDropdownBox
 import com.tzh.sneakerland.screen.detail.component.ColorCircleRow
 import com.tzh.sneakerland.screen.detail.component.QuantitySelector
@@ -87,6 +81,7 @@ import com.tzh.sneakerland.ui.theme.SnakerLandTheme
 import com.tzh.sneakerland.util.Extension.showToast
 import com.tzh.sneakerland.util.Gender
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 
 @Composable
 fun DetailScreen(
@@ -118,116 +113,112 @@ fun DetailScreen(
         }
     }
 
-    with(sharedTransitionScope) {
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(8.dp)
+            .verticalScroll(state = rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+
+        DetailImage(
+            sharedTransitionScope = sharedTransitionScope,
+            animatedContentScope = animatedContentScope,
+            sneakerModel = mSneakerModel,
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(8.dp)
-                .verticalScroll(state = rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            DetailImage(
-                mSneakerModel,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(260.dp),
-                animateModifier = Modifier.sharedElement(
-                    state = rememberSharedContentState(
-                        AnimatedKeyExtension.getImageKey(
-                            mSneakerModel.id.toString()
-                        ),
-                    ), animatedVisibilityScope = animatedContentScope
-                ),
-                onBackPress = onBackPress,
-                onFavouriteClick = {
-                    viewModel.updateFavourite(
-                        mSneakerModel.copy(
-                            isFavourite = !mSneakerModel.isFavourite
-                        )
+                .fillMaxWidth()
+                .height(260.dp),
+            onBackPress = onBackPress,
+            onFavouriteClick = {
+                viewModel.updateFavourite(
+                    mSneakerModel.copy(
+                        isFavourite = !mSneakerModel.isFavourite
                     )
-                },
+                )
+            },
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val genderShoeText = when (mSneakerModel.gender) {
+                Gender.MALE -> "Men's Shoes"
+                Gender.FEMALE -> "Women's Shoes"
+                Gender.UNISEX -> "Unisex Shoes"
+            }
+            if (mSneakerModel.gender == Gender.MALE) "Man's Shoes" else "Woman's Shoes"
+            Text(
+                text = genderShoeText, style = MaterialTheme.typography.bodySmall.copy(
+                    MaterialTheme.colorScheme.onBackground.copy(
+                        alpha = 0.6f
+                    )
+                )
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val genderShoeText = when (mSneakerModel.gender) {
-                    Gender.MALE -> "Men's Shoes"
-                    Gender.FEMALE -> "Women's Shoes"
-                    Gender.UNISEX -> "Unisex Shoes"
-                }
-                if (mSneakerModel.gender == Gender.MALE) "Man's Shoes" else "Woman's Shoes"
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Star",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
                 Text(
-                    text = genderShoeText, style = MaterialTheme.typography.bodySmall.copy(
+                    text = "(${mSneakerModel.rating.formatIfWhole()})",
+                    style = MaterialTheme.typography.bodySmall.copy(
                         MaterialTheme.colorScheme.onBackground.copy(
                             alpha = 0.6f
                         )
                     )
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Star",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Text(
-                        text = "(${mSneakerModel.rating.formatIfWhole()})",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            MaterialTheme.colorScheme.onBackground.copy(
-                                alpha = 0.6f
-                            )
-                        )
-                    )
-                }
-            }
-            //TitleText
-            TitleRow(mSneakerModel, animatedContentScope)
-            SizeSelectorContent(
-                Modifier.fillMaxWidth(), selectedValue = mSneakerModel.selectedSize
-            ) {
-                mSneakerModel.selectedSize = it
-            }
-            AnimatedContainerDropdownBox(
-                "Description",
-                content = {
-                    Text(
-                        mSneakerModel.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.alpha(0.5f)
-                    )
-                },
-            )
-            AnimatedContainerDropdownBox(
-                "Free Delivery and Returns",
-                content = {
-                    Text(
-                        mSneakerModel.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.alpha(0.5f)
-                    )
-                },
-            )
-            ColorCircleRow(mSneakerModel.selectedColor) {
-                mSneakerModel.selectedColor = it
-            }
-            QuantitySelector(mSneakerModel.currentQty) {
-                mSneakerModel.currentQty = it
-            }
-            AddCartButton() {
-                viewModel.addCart(onLoading = {
-                    isLoading = it
-                }, onSuccessMessage = {
-                    context.showToast(it)
-                    onBackPress()
-                }, onShowMessage = {
-                    context.showToast(it)
-                })
             }
         }
+        with(sharedTransitionScope) {//TitleText
+            TitleRow(mSneakerModel, animatedContentScope)
+        }
+        SizeSelectorContent(
+            Modifier.fillMaxWidth(), selectedValue = mSneakerModel.selectedSize
+        ) {
+            mSneakerModel.selectedSize = it
+        }
+        AnimatedContainerDropdownBox(
+            "Description",
+            content = {
+                Text(
+                    mSneakerModel.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.alpha(0.5f)
+                )
+            },
+        )
+        AnimatedContainerDropdownBox(
+            "Free Delivery and Returns",
+            content = {
+                Text(
+                    mSneakerModel.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.alpha(0.5f)
+                )
+            },
+        )
+        ColorCircleRow(mSneakerModel.selectedColor) {
+            mSneakerModel.selectedColor = it
+        }
+        QuantitySelector(mSneakerModel.currentQty) {
+            mSneakerModel.currentQty = it
+        }
+        AddCartButton() {
+            viewModel.addCart(onLoading = {
+                isLoading = it
+            }, onSuccessMessage = {
+                context.showToast(it)
+                onBackPress()
+            }, onShowMessage = {
+                context.showToast(it)
+            })
+        }
     }
+
 }
 
 @Composable
@@ -349,74 +340,86 @@ fun Double.formatIfWhole(): String {
 
 @Composable
 fun DetailImage(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     sneakerModel: SneakerModel,
     modifier: Modifier,
-    animateModifier: Modifier,
     onBackPress: () -> Unit,
     onFavouriteClick: () -> Unit
 ) {
     val context = LocalContext.current
     Box(modifier) {
-        val infiniteTransition = rememberInfiniteTransition()
-        val rotation by infiniteTransition.animateFloat(
-            initialValue = 0f,
-            targetValue = 360f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 5000, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
-            ), label = ""
-        )
-
         val imageRequest =
             ImageRequest.Builder(context).data(sneakerModel.image).dispatcher(Dispatchers.IO)
-                .crossfade(true).diskCachePolicy(CachePolicy.ENABLED)
-                .memoryCachePolicy(CachePolicy.ENABLED).build()
-        AsyncImage(
-            model = imageRequest,
-            contentDescription = sneakerModel.image,
-            modifier = Modifier
-                .fillMaxSize()
-                .fillMaxWidth()
-                .then(animateModifier),
-            contentScale = ContentScale.Fit,
-        )
+                .crossfade(true)
+                .placeholderMemoryCacheKey(AnimatedKeyExtension.getImageKey(sneakerModel.id.toString())) //  same key as shared element key
+                .memoryCacheKey(AnimatedKeyExtension.getImageKey(sneakerModel.id.toString()))
+                .diskCachePolicy(CachePolicy.ENABLED).memoryCachePolicy(CachePolicy.ENABLED).build()
+        with(sharedTransitionScope) {
+            val showTopBarIcon by produceState(initialValue = false) {
+                delay(1000)
+                value = !sharedTransitionScope.isTransitionActive
+            }
+            AsyncImage(
+                model = imageRequest,
+                contentDescription = sneakerModel.image,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(
+                        Modifier.sharedElement(
+                            state = rememberSharedContentState(
+                                AnimatedKeyExtension.getImageKey(sneakerModel.id.toString()),
+                            ), animatedVisibilityScope = animatedContentScope
+                        )
+                    ),
+                contentScale = ContentScale.Fit,
+            )
+            AnimatedVisibility(
+                showTopBarIcon, label = "AnimateShowTopBar",
+                enter = slideInVertically() + fadeIn(),
+                exit = slideOutVertically() + fadeOut()
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    IconButton(
+                        onClick = onBackPress,
+                        modifier = Modifier
+                            .border(
+                                1.dp, color = Color.Black.copy(
+                                    alpha = 0.4f
+                                ), shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            contentDescription = "Back",
 
-        IconButton(
-            onClick = onBackPress,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp)
-                .border(
-                    1.dp, color = Color.Black.copy(
-                        alpha = 0.4f
-                    ), shape = CircleShape
-                )
-        ) {
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowLeft,
-                contentDescription = "Back",
+                            )
+                    }
+                    IconButton(
+                        onClick = onFavouriteClick,
+                        modifier = Modifier
+                            .border(
+                                1.dp, color = Color.Black.copy(
+                                    alpha = 0.4f
+                                ), shape = CircleShape
+                            )
 
-                )
+                    ) {
+                        Icon(
+                            imageVector = if (sneakerModel.isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = "Favorite",
+                            tint = if (sneakerModel.isFavourite) PrimaryColor else OnPrimaryColor,
+                        )
+                    }
+                }
+            }
         }
-        IconButton(
-            onClick = onFavouriteClick,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .border(
-                    1.dp, color = Color.Black.copy(
-                        alpha = 0.4f
-                    ), shape = CircleShape
-                )
 
-        ) {
-            Icon(
-                imageVector = if (sneakerModel.isFavourite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                contentDescription = "Favorite",
-                tint = if (sneakerModel.isFavourite) PrimaryColor else OnPrimaryColor,
-
-                )
-        }
     }
 }
 

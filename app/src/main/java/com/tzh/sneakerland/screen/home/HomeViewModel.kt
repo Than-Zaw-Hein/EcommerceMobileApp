@@ -53,11 +53,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setSneaker(sneaker: SneakerModel) {
-        ecommerceRepository.detailSneaker = sneaker
-    }
-
-
     fun onEvent(event: HomeUIEvent) {
         when (event) {
             is HomeUIEvent.FilterByType -> _uiState.value = _uiState.value.copy(

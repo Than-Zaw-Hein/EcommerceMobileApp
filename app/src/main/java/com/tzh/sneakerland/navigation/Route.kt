@@ -1,7 +1,5 @@
 package com.tzh.sneakerland.navigation
 
-import com.tzh.sneakerland.data.model.SneakerModel
-import com.tzh.sneakerland.util.Gender
 import kotlinx.serialization.Serializable
 
 
@@ -16,6 +14,5 @@ data object HomeRoute
 data class DetailRoute(
     val id: Int,
     val image: String,
-    val name: String,
-
-    )
+    val name: String
+)

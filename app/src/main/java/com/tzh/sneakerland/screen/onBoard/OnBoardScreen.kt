@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemGesturesPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -32,12 +33,13 @@ fun OnBoardScreen(onStartClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .systemGesturesPadding()
     ) {
         Image(
             painter = painterResource(R.drawable.wallpaper),
             modifier = Modifier.fillMaxSize(),
             contentDescription = "Wallpaper",
-            contentScale = ContentScale.FillHeight
+            contentScale = ContentScale.Crop
         )
 
         Column(
